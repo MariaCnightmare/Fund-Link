@@ -1,0 +1,23 @@
+[project]
+name = "fund-link"
+version = "0.1.0"
+description = "Market Structure Time Machine"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "sqlalchemy>=2.0",
+    "asyncpg",
+    "alembic",
+    "pandas",
+    "numpy",
+    "statsmodels",
+    "networkx",
+    "streamlit",
+    "psycopg2-binary"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
