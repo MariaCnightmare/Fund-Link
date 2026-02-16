@@ -5,12 +5,10 @@ services:
     image: postgres:16
     container_name: fundlink-db
     restart: always
-    environment:
-      POSTGRES_USER: fundlink
-      POSTGRES_PASSWORD: fundlink
-      POSTGRES_DB: fundlink
+    env_file:
+      - .env.example
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - fundlink-data:/var/lib/postgresql/data
 

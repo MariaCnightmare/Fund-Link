@@ -3,21 +3,30 @@ name = "fund-link"
 version = "0.1.0"
 description = "Market Structure Time Machine"
 requires-python = ">=3.12"
-
 dependencies = [
-    "fastapi",
-    "uvicorn",
-    "sqlalchemy>=2.0",
-    "asyncpg",
-    "alembic",
-    "pandas",
-    "numpy",
-    "statsmodels",
-    "networkx",
-    "streamlit",
-    "psycopg2-binary"
+  "fastapi",
+  "uvicorn[standard]",
+  "sqlalchemy>=2.0",
+  "asyncpg",
+  "alembic",
+  "pydantic",
+  "python-dotenv",
+  "pandas",
+  "numpy",
+  "statsmodels",
+  "networkx",
 ]
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# 配布対象を packages/core 配下のみに限定
+package-dir = {"" = "packages/core"}
+
+[tool.setuptools.packages.find]
+where = ["packages/core"]
+include = ["fund_link*"]
+exclude = ["tests*"]
+
