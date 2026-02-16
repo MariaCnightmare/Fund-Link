@@ -12,6 +12,7 @@ dependencies = [
   "pydantic",
   "python-dotenv",
   "pandas",
+  "yfinance",
   "numpy",
   "statsmodels",
   "networkx",
@@ -29,4 +30,3 @@ package-dir = {"" = "packages/core"}
 where = ["packages/core"]
 include = ["fund_link*"]
 exclude = ["tests*"]
-

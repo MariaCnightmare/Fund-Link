@@ -42,6 +42,8 @@ class PriceDaily(Base):
     close: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     adj_close: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
     volume: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, server_default="unknown")
+    currency: Mapped[str | None] = mapped_column(String(16), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     symbol: Mapped["Symbol"] = relationship(back_populates="prices")

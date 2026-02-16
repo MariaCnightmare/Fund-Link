@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import Select, and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +13,13 @@ from apps.api.db.models import Job, NetworkEdge, NetworkSnapshot, Symbol
 from apps.api.db.session import get_db_session
 
 app = FastAPI(title="Fund-Link API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class FrameNode(BaseModel):
