@@ -59,31 +59,53 @@ PGPASSWORD=fundlink psql -h localhost -p 5433 -U fundlink -d fundlink -c \
   "select s.ticker as symbol, count(*) from features_daily f join symbols s on s.id=f.symbol_id where f.feature_set_version='v1_market_daily' group by 1 order by 1;"
 ```
 
-### 10. Frames API の確認
+### 10. Granger ネットワーク生成（features_daily -> snapshots/edges）
 
 ```bash
-# 単日
-curl "http://localhost:8000/frames?end_date=2026-02-10&window_size=30&method=granger&p_threshold=0.05&max_lag=2&job_type=granger"
+PYTHONPATH=. DATABASE_URL="postgresql+asyncpg://fundlink:fundlink@localhost:5433/fundlink" \
+  .venv/bin/python apps/worker/scripts/run_granger.py \
+  --start 2023-01-01 \
+  --end 2026-02-16 \
+  --window_size 30 \
+  --max_lag 3 \
+  --p_threshold 0.05 \
+  --method granger \
+  --feature_set_version v1_market_daily \
+  --feature_key return_1d
 
-# 期間(index)
-curl "http://localhost:8000/frames/range?start_date=2026-02-10&end_date=2026-02-11&window_size=30&method=granger"
+# 既存対象を削除して作り直す場合
+PYTHONPATH=. DATABASE_URL="postgresql+asyncpg://fundlink:fundlink@localhost:5433/fundlink" \
+  .venv/bin/python apps/worker/scripts/run_granger.py \
+  --start 2023-01-01 \
+  --end 2026-02-16 \
+  --window_size 30 \
+  --max_lag 3 \
+  --p_threshold 0.05 \
+  --reset
 ```
 
-### 11. Range -> Detail -> UI再生（コピペ）
+### 11. snapshots / edges 件数確認（SQL）
 
 ```bash
-# 1) 必要ならseedを再現可能にリセット
-.venv/bin/python apps/worker/scripts/seed_sample.py --reset
+PGPASSWORD=fundlink psql -h localhost -p 5433 -U fundlink -d fundlink -c \
+  "select end_date, window_size, method, count(*) from network_snapshots group by 1,2,3 order by 1 desc limit 10;"
 
-# 2) 期間indexを取得（軽量）
-curl -s "http://localhost:8000/frames/range?start_date=2026-02-10&end_date=2026-02-11&window_size=30&method=granger" | jq
-
-# 3) index先頭のsnapshot_idを取り出して詳細取得
-SNAPSHOT_ID=$(curl -s "http://localhost:8000/frames/range?start_date=2026-02-10&end_date=2026-02-11&window_size=30&method=granger" | jq -r '.items[0].snapshot_id')
-curl -s "http://localhost:8000/frames/${SNAPSHOT_ID}" | jq
+PGPASSWORD=fundlink psql -h localhost -p 5433 -U fundlink -d fundlink -c \
+  "select snapshot_id, count(*) from network_edges group by 1 order by 1 desc limit 10;"
 ```
 
-### 12. UI（再生ビューワ）
+### 12. Frames API の確認（range -> detail）
+
+```bash
+# 期間index
+curl -s "http://127.0.0.1:8000/frames/range?start_date=2026-02-10&end_date=2026-02-16&window_size=30&method=granger" | jq .
+
+# 詳細
+SNAPSHOT_ID=$(curl -s "http://127.0.0.1:8000/frames/range?start_date=2026-02-10&end_date=2026-02-16&window_size=30&method=granger" | jq -r '.items[0].snapshot_id')
+curl -s "http://127.0.0.1:8000/frames/${SNAPSHOT_ID}" | jq '{snapshot_id,end_date,window_size,method,nodes:(.nodes|length),edges:(.edges|length)}'
+```
+
+### 13. UI（再生ビューワ）
 
 ```bash
 # フロント依存インストール
@@ -94,7 +116,7 @@ npm install
 npm run dev
 ```
 
-### 13. UI 動作確認
+### 14. UI 動作確認
 
 ```bash
 # 1) range index が取れる
@@ -107,7 +129,7 @@ curl -s "http://localhost:8000/frames/${SNAPSHOT_ID}" | jq
 # 3) ブラウザで http://localhost:5173 を開き、Load -> Play で end_date とグラフ更新を確認
 ```
 
-### 14. UI 操作メモ
+### 15. UI 操作メモ
 
 ```text
 - Speed スライダー: 200ms〜1500ms で再生間隔を変更
